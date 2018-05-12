@@ -2,34 +2,39 @@
 from bs4 import BeautifulSoup
 import requests
 import re
+import chardet
+import sys
 
 class Notice:
     IDNumbers = []
-    URLs = []
     Titles = []
     Dates = []
 
     def __init__(self):
+
         url = 'http://dormitory.cau.ac.kr/bbs/bbs_list.php?bbsID=notice'
         source = requests.get(url)
         source.encoding = None
-        text_file = source.text
+        htmlSoup = BeautifulSoup(source.text, 'html.parser')
 
-        for detail in BeautifulSoup(text_file, 'html.parser').find_all("tr", {"bgcolor": "#fffcdb"}):
-            menuSoup = BeautifulSoup(str(detail), 'html.parser')
-            URL = menuSoup.find('a')['href']
-            URL = str(URL).replace("s", "", 1)
-            detailSource = requests.get(URL)
-            detailSource.encoding = None
+        for listCode in htmlSoup.find_all("tr", {"bgcolor": "#fffcdb"}):
+            listSoup = BeautifulSoup(str(listCode), 'html.parser')
 
-            # Number Parsing
-            self.IDNumbers.append(noticeNum(detailSource.text))
-            #URL Parsing
-            self.URLs.append(URL)
-            # Title Parsing
-            self.Titles.append(noticeTitle(detailSource.text))
-            # Date Parsing
-            self.Dates.append(noticeDate(detailSource.text))
+            # Extract Number
+            url = listSoup.find('a')['href']
+            url = str(url).replace("https://dormitory.cau.ac.kr/bbs/bbs_view.php?pNum=", "", 1)
+            num = str(url).replace("&bbsID=notice", "", 1)
+            self.IDNumbers.append((num))
+
+
+            # Extract Title
+            title = listSoup.find("span", {"class": "bbsTitle"})
+            self.Titles.append(title.text)
+
+
+            #Extract Date
+            date = listSoup.find_all("td", {"class": "t_c"})[3]
+            self.Dates.append(date.text)
 
 def noticeNum(url):
     htmlSoup = BeautifulSoup(url, 'html.parser')
@@ -41,6 +46,7 @@ def noticeTitle(url):
     htmlSoup = BeautifulSoup(url, 'html.parser')
     title = htmlSoup.find_all("td", {"class": "bold f14"})[0].text
     result = str(title).replace("제목 : ", "", 1)
+    print(result.encode('utf-8'))
     return result
 
 def noticeDate(url):
