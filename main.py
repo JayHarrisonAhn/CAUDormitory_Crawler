@@ -39,8 +39,7 @@ for key in snapshot:
             # See documentation on defining a message payload.
             message = firebase_admin.messaging.Message(
                 notification=messaging.Notification(
-                    title=pushNoticeTitles[i],
-                    body='새로운 공지사항',
+                    body=pushNoticeTitles[i],
                 ),
                 token=key,
             )
