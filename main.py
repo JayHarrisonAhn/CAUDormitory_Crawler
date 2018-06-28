@@ -19,6 +19,8 @@ notice = Notice()
 pushNotices=[]
 pushNoticeTitles=[]
 snapshot = root.child('Seoul_Bluemir/Notices').get()
+
+
 for i in range(0,len(notice.IDNumbers)):
     isExisted = 0
     for key in snapshot:
@@ -32,17 +34,21 @@ for i in range(0,len(notice.IDNumbers)):
 snapshot = root.child('Users').get()
 
 for key in snapshot:
-    for i in range(0,len(pushNotices)):
-        # See documentation on defining a message payload.
-        message = firebase_admin.messaging.Message(
-            notification=messaging.Notification(
-                title=pushNoticeTitles[i],
-                body='새로운 공지사항',
-            ),
-            token=key,
-        )
-        response = firebase_admin.messaging.send(message)
-        print('Successfully sent message:', response)
+    try:
+        for i in range(0,len(pushNotices)):
+            # See documentation on defining a message payload.
+            message = firebase_admin.messaging.Message(
+                notification=messaging.Notification(
+                    title=pushNoticeTitles[i],
+                    body='새로운 공지사항',
+                ),
+                token=key,
+            )
+            response = firebase_admin.messaging.send(message)
+
+    except firebase_admin.messaging.ApiCallError:
+        root.child('Users').child(key).delete()
+
 
 
 for i in range(len(notice.IDNumbers)):
@@ -52,9 +58,3 @@ for i in range(len(notice.IDNumbers)):
             'Date' : (notice.Dates)[i]
         }
     })
-
-
-
-
-
-
